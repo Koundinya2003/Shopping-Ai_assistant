@@ -1,0 +1,49 @@
+# Environment variables / secrets
+.env
+**/.env
+.env.*
+**/.env.*
+*.env
+**/*.env
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.test
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env.py
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
