@@ -1,0 +1,370 @@
+<title>AI Grocery Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Instrument+Sans:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Identity: a conversation with your cart. Cool morning sky paper, navy ink, berry for the AI voice, citrus for confidence, teal for the deterministic rules. Motif: chat bubbles and pick cards. */
+:root {
+  --sky: #e9f0f6;
+  --card: #ffffff;
+  --ink: #10213a;
+  --muted: #53627a;
+  --berry: #c0245e;
+  --citrus: #e89a0c;
+  --teal: #0d7a76;
+  --line: #c9d6e3;
+  --wash: #dbe6f0;
+  --display: "Syne", "Trebuchet MS", sans-serif;
+  --body: "Instrument Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sky: #0b1424; --card: #13203a; --ink: #e7eef7; --muted: #9fb0c7; --berry: #ff6fa0;
+    --citrus: #ffc457; --teal: #4fd3c4; --line: #26385a; --wash: #182844;
+  }
+}
+:root[data-theme="dark"] {
+  --sky: #0b1424; --card: #13203a; --ink: #e7eef7; --muted: #9fb0c7; --berry: #ff6fa0;
+  --citrus: #ffc457; --teal: #4fd3c4; --line: #26385a; --wash: #182844;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.sheet { width: 960px; margin: 0 auto; padding: 12px 0; display: grid; }
+.panel { position: relative; padding: 32px 44px 36px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--berry); display: flex; gap: 12px; align-items: center; }
+.eyebrow::after { content: ""; flex: 0 0 80px; height: 2px; background: var(--berry); }
+h2 { font: 800 40px/1.02 var(--display); letter-spacing: -.01em; margin: 12px 0 8px; max-width: 760px; }
+h2 em { font-style: normal; color: var(--berry); }
+.lede { color: var(--muted); font-size: 16px; max-width: 660px; }
+.mono { font-family: var(--mono); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes fillx { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+/* ---------- hero ---------- */
+.hero { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding-top: 40px; }
+.hero h1 { font: 800 60px/0.98 var(--display); letter-spacing: -.025em; margin: 18px 0 18px; }
+.hero h1 em { font-style: normal; color: var(--berry); display: block; }
+.hero p { font-size: 16.5px; max-width: 420px; }
+.hero p b { font-weight: 700; }
+.foot { margin-top: 18px; font: 400 12.5px/1.5 var(--mono); color: var(--muted); max-width: 420px; }
+.stats { grid-column: 1 / -1; display: flex; gap: 0; margin-top: 4px; border-top: 2px solid var(--ink); }
+.stat { flex: 1; padding: 14px 16px 0 0; }
+.stat b { display: block; font: 800 44px/1 var(--display); letter-spacing: -.02em; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+.stat:nth-child(2) b { color: var(--berry); }
+.stat:nth-child(4) b { color: var(--teal); }
+
+.chat { position: relative; background: var(--wash); border-radius: 28px 28px 28px 6px; padding: 18px; display: grid; gap: 10px; align-self: start; }
+.msg { max-width: 82%; padding: 10px 14px; font-size: 14px; }
+.me { justify-self: end; background: var(--ink); color: var(--sky); border-radius: 18px 18px 4px 18px; animation: loopin 10s ease-out infinite; }
+.me .chips { display: flex; gap: 6px; margin-top: 6px; }
+.me .chips span { font: 500 11.5px/1 var(--mono); background: rgba(255,255,255,.14); padding: 5px 7px; border-radius: 4px; }
+.typing { justify-self: start; display: flex; gap: 5px; background: var(--card); border-radius: 18px 18px 18px 4px; padding: 12px 14px; animation: typingwin 10s linear infinite; }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--berry); animation: bounce 1s ease-in-out infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; }
+.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%, 100% { transform: translateY(0); opacity: .45; } 50% { transform: translateY(-5px); opacity: 1; } }
+@keyframes typingwin { 0%, 8% { opacity: 0; } 12%, 26% { opacity: 1; } 30%, 100% { opacity: .25; } }
+@keyframes loopin { 0% { opacity: 0; transform: translateY(10px); } 6%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.pick { background: var(--card); border-radius: 4px 18px 18px 18px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; animation: pickin 10s cubic-bezier(.2,.9,.3,1.15) infinite; animation-delay: var(--d); }
+@keyframes pickin { 0%, 28% { opacity: 0; transform: translateX(-20px); } 34%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.pick .nm { font-weight: 700; font-size: 14.5px; }
+.pick .why { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+.pick .badge { font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--teal); align-self: center; }
+.meter { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 34px; gap: 8px; align-items: center; }
+.meter .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.meter .bar i { display: block; height: 100%; background: var(--teal); transform-origin: left; animation: meterloop 10s ease-out infinite; animation-delay: var(--d); }
+.meter .bar i.mid { background: var(--citrus); }
+@keyframes meterloop { 0%, 32% { transform: scaleX(0); } 44%, 100% { transform: scaleX(1); } }
+.meter b { font: 500 12px/1 var(--mono); }
+.chat .label { position: absolute; top: -12px; left: 22px; background: var(--berry); color: var(--sky); font: 700 11px/1 var(--mono); padding: 6px 9px; text-transform: uppercase; letter-spacing: .08em; border-radius: 3px; }
+
+/* ---------- pipeline ---------- */
+.pipe { background: var(--card); }
+.track { display: grid; grid-template-columns: repeat(6, 1fr); margin-top: 26px; position: relative; }
+.track::before { content: ""; position: absolute; left: 20px; right: 20px; top: 19px; height: 3px; background: var(--line); }
+.track .flow { position: absolute; left: 20px; right: 20px; top: 19px; height: 3px; background: var(--berry); transform-origin: left; animation: fillx 2.6s ease-in-out both; }
+.node { position: relative; padding-right: 14px; animation: rise .6s ease-out both; }
+.node .dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 800 16px/1 var(--display); background: var(--sky); border: 3px solid var(--ink); position: relative; animation: pop .45s cubic-bezier(.3,1.6,.5,1) both; animation-delay: inherit; }
+.node.ai .dot { background: var(--berry); border-color: var(--berry); color: var(--sky); }
+.node.rule .dot { background: var(--teal); border-color: var(--teal); color: var(--sky); }
+.node h3 { font: 700 17px/1.15 var(--display); margin: 12px 0 4px; }
+.node .k { font: 500 11.5px/1.35 var(--mono); color: var(--teal); }
+.node.ai .k { color: var(--berry); }
+.node p { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.rules { margin-top: 26px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+.rules h3 { font: 700 19px/1.2 var(--display); }
+.rules .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.keys { display: flex; flex-wrap: wrap; gap: 7px; }
+.keys span { font: 500 12.5px/1 var(--mono); padding: 8px 10px; border-radius: 999px; border: 1.5px solid var(--teal); color: var(--teal); animation: pop .4s ease-out both; }
+.keys span.hit { background: var(--teal); color: var(--card); }
+.pairs { margin-top: 10px; font-size: 13px; color: var(--muted); }
+.pairs b { color: var(--ink); font-weight: 600; }
+
+/* ---------- fallback ---------- */
+.tiers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; margin-top: 24px; }
+.tier { padding: 18px 20px 20px; position: relative; animation: rise .6s ease-out both; }
+.tier:nth-child(1) { background: var(--berry); color: var(--sky); border-radius: 22px 0 0 22px; }
+.tier:nth-child(2) { background: var(--wash); }
+.tier:nth-child(3) { background: var(--card); border: 2px solid var(--teal); border-radius: 0 22px 22px 0; }
+.tier .n { font: 800 48px/1 var(--display); opacity: .9; }
+.tier:nth-child(3) .n { color: var(--teal); }
+.tier h3 { font: 700 18px/1.2 var(--display); margin: 6px 0 6px; }
+.tier p { font-size: 13.5px; }
+.tier:nth-child(1) p { color: var(--sky); }
+.tier .when { font: 500 11.5px/1.4 var(--mono); margin-top: 10px; opacity: .8; }
+.lower { display: grid; grid-template-columns: 1fr 1.15fr; gap: 36px; margin-top: 28px; }
+.lower h3 { font: 700 19px/1.2 var(--display); margin-bottom: 4px; }
+.lower .sub { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.backoff { margin-top: 30px; display: flex; align-items: flex-end; gap: 10px; height: 110px; border-bottom: 2px solid var(--ink); padding-left: 4px; }
+.bk { width: 54px; background: var(--citrus); border-radius: 6px 6px 0 0; position: relative; transform-origin: bottom; animation: grow .7s ease-out both; }
+@keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.bk span { position: absolute; top: -20px; left: 0; right: 0; text-align: center; font: 500 12px/1 var(--mono); }
+.bk.cap { background: none; border: 2px dashed var(--citrus); }
+.bklab { display: flex; gap: 10px; padding-left: 4px; margin-top: 6px; }
+.bklab span { width: 54px; text-align: center; font: 400 11px/1.2 var(--mono); color: var(--muted); }
+.facts { list-style: none; margin-top: 14px; font-size: 13px; }
+.facts li { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.facts b { font-family: var(--mono); font-weight: 500; }
+.who { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.who td { padding: 9px 4px; border-bottom: 1px solid var(--line); animation: rise .5s ease-out both; }
+.who td:last-child { text-align: right; }
+.pill { font: 500 11px/1 var(--mono); padding: 5px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.pill.r { background: var(--teal); color: var(--card); }
+.pill.a { background: var(--berry); color: var(--sky); }
+
+/* ---------- anatomy ---------- */
+.anat { background: var(--card); }
+.anatgrid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; margin-top: 24px; }
+.bigpick { border: 2px solid var(--ink); border-radius: 6px 26px 26px 26px; padding: 20px 22px; position: relative; background: var(--sky); }
+.bigpick .top { display: flex; justify-content: space-between; align-items: baseline; }
+.bigpick .nm { font: 800 24px/1.1 var(--display); }
+.bigpick .conf { font: 800 34px/1 var(--display); color: var(--teal); }
+.bigpick .conf small { font-size: 14px; }
+.bigpick .bar { height: 8px; background: var(--line); border-radius: 4px; margin: 10px 0 14px; overflow: hidden; }
+.bigpick .bar i { display: block; height: 100%; width: 92%; background: var(--teal); transform-origin: left; animation: fillx 1.6s ease-out .3s both; }
+.field { display: grid; grid-template-columns: 90px 1fr; gap: 10px; padding: 7px 0; border-top: 1px dashed var(--line); font-size: 13.5px; animation: wipe .6s ease-out both; }
+.field span:first-child { font: 500 11px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--berry); }
+.field .pc { display: flex; flex-wrap: wrap; gap: 6px; }
+.field .pc i { font-style: normal; font-size: 12.5px; padding: 3px 8px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); }
+.src { margin-top: 10px; font: 400 11.5px/1.4 var(--mono); color: var(--muted); }
+.right h3 { font: 700 19px/1.2 var(--display); margin-bottom: 8px; }
+.bands { display: grid; grid-template-columns: 70fr 20fr 10fr; height: 34px; border-radius: 6px; overflow: hidden; font: 500 11.5px/34px var(--mono); color: #fff; text-align: center; }
+.bands div { animation: wipe .7s ease-out both; }
+.bands .lo { background: #d6453d; }
+.bands .md { background: var(--citrus); color: #10213a; }
+.bands .hi { background: var(--teal); }
+.bandlab { display: grid; grid-template-columns: 70fr 20fr 10fr; font: 400 11px/1.6 var(--mono); color: var(--muted); margin-top: 4px; }
+.bandlab span:nth-child(2), .bandlab span:nth-child(3) { text-align: center; }
+.sent { margin-top: 22px; }
+.sentbar { display: flex; height: 22px; border-radius: 4px; overflow: hidden; }
+.sentbar div { transform-origin: left; animation: fillx 1.2s ease-out both; }
+.sentlab { display: flex; justify-content: space-between; font-size: 12.5px; margin-top: 6px; color: var(--muted); }
+.sentlab b { color: var(--ink); font-weight: 700; }
+.trust { list-style: none; margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; font-size: 13px; }
+.trust li { padding-left: 16px; position: relative; animation: rise .5s ease-out both; }
+.trust li::before { content: ""; position: absolute; left: 0; top: 7px; width: 8px; height: 8px; border-radius: 2px; background: var(--berry); }
+
+/* ---------- stack ---------- */
+.stackgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 24px; }
+.stackgrid h3 { font: 700 18px/1.2 var(--display); margin-bottom: 10px; }
+.layer { padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; animation: rise .5s ease-out both; }
+.layer span { display: block; font: 500 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--berry); }
+.ep { display: grid; grid-template-columns: 50px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.ep b { font: 500 11.5px/1.6 var(--mono); color: var(--teal); }
+.ep code { font: 500 13px/1.4 var(--mono); display: block; }
+.term { margin-top: 14px; background: var(--ink); color: var(--sky); border-radius: 4px 16px 16px 16px; padding: 12px 14px; font: 400 12.5px/1.7 var(--mono); }
+.term .c { opacity: .6; }
+.next { list-style: none; font-size: 13.5px; }
+.next li { padding: 7px 0 7px 26px; position: relative; border-bottom: 1px solid var(--line); animation: rise .5s ease-out both; }
+.next li::before { content: ""; position: absolute; left: 0; top: 10px; width: 14px; height: 14px; border: 2px solid var(--muted); border-radius: 3px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 980px) { .sheet { width: 100%; } }
+</style>
+
+<main class="sheet">
+
+<section class="panel hero" data-panel="01_hero" data-alt="AI Grocery Assistant: your cart, read back to you. An intelligent grocery shopping companion that looks at what is in your cart and suggests what goes with it, with a plain language reason for every pick. Rules choose the products, an LLM explains and ranks them, and the app works with or without an API key. Built with Next.js and FastAPI. Animated example: a cart with Organic Whole Milk; the assistant answers with Greek Yogurt Plain, confidence 92, a protein rich breakfast pairing; Cheddar Cheese Block, confidence 85, a classic dairy combination; and Free Range Eggs, because milk and eggs are breakfast staples. Numbers: 15 products, 147 seeded reviews, 13 cart pairing rules, 3 AI Picks per cart, 52 backend tests.">
+  <div>
+    <div class="eyebrow">AI grocery assistant</div>
+    <h1>Your cart, <em>read back to you.</em></h1>
+    <p>A grocery companion that looks at what is already in your cart and suggests what goes with it, <b>with a reason for every pick.</b> Rules choose the products, an LLM ranks and explains them, and nothing breaks when the LLM is not there.</p>
+    <div class="foot">Next.js front end · FastAPI back end · OpenRouter for the language model</div>
+  </div>
+  <div class="chat">
+    <div class="label">AI Picks</div>
+    <div class="msg me">In my cart<div class="chips"><span>Organic Whole Milk</span></div></div>
+    <div class="typing"><i></i><i></i><i></i></div>
+    <div class="pick" style="--d:0s">
+      <span class="nm">Greek Yogurt Plain</span><span class="badge">AI ranked</span>
+      <span class="why">Customers buying milk often add Greek yogurt for a protein rich breakfast.</span>
+      <div class="meter"><div class="bar"><i style="width:92%"></i></div><b>92</b></div>
+    </div>
+    <div class="pick" style="--d:.35s">
+      <span class="nm">Cheddar Cheese Block</span><span class="badge">AI ranked</span>
+      <span class="why">Milk and cheese are a classic dairy combination for breakfast and cooking.</span>
+      <div class="meter"><div class="bar"><i style="width:85%" class="mid"></i></div><b>85</b></div>
+    </div>
+    <div class="pick" style="--d:.7s">
+      <span class="nm">Free Range Eggs</span><span class="badge">rule reason</span>
+      <span class="why">Milk and eggs are breakfast staples.</span>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>15</b><span>grocery products</span></div>
+    <div class="stat"><b>147</b><span>seeded customer reviews</span></div>
+    <div class="stat"><b>13</b><span>cart pairing rules</span></div>
+    <div class="stat"><b>3</b><span>AI Picks per cart</span></div>
+    <div class="stat"><b>52</b><span>backend tests</span></div>
+  </div>
+</section>
+
+<section class="panel pipe" data-panel="02_pipeline" data-alt="How a pick is made, in six steps. 1. The cart changes, and after a 500 ms debounce the front end posts the cart names to POST /recommendations/. 2. Rule match: each cart item is matched against RECOMMENDATION_RULES, 13 cart keys each with 3 pairings, and products are found with a SQL LIKE query, skipping anything already in the cart. 3. The top 5 candidates are kept. 4. Cache: an MD5 key of the sorted cart and candidate ids, kept for 5 minutes, so the same cart never pays for the same LLM call twice. 5. The LLM, DeepSeek V3 through OpenRouter, ranks and enriches the candidates with confidence, why, when, best for, review summary, pros and cons, using customer reviews. 6. The top 3 come back as AI Picks. Cart keys: Milk, Bread, Eggs, Yogurt, Tomatoes, Bananas, Coffee, Chocolate, Rice, Chips, Cheese, Butter, Berries. Example pairings: Bread to Almond Butter, Rice to Schezwan Sauce, Chips to Sparkling Water Lime.">
+  <div class="eyebrow">How a pick is made</div>
+  <h2>Rules pick the shelf. <em>The model explains the choice.</em></h2>
+  <p class="lede">Every cart change runs the same short pipeline. Teal steps are deterministic, berry steps involve the language model.</p>
+  <div class="track">
+    <div class="flow"></div>
+    <div class="node" style="animation-delay:.1s"><div class="dot">1</div><h3>Cart changes</h3><div class="k">500 ms debounce</div><p>Then <span class="mono">POST /recommendations/</span> with the cart names.</p></div>
+    <div class="node rule" style="animation-delay:.45s"><div class="dot">2</div><h3>Rule match</h3><div class="k">RECOMMENDATION_RULES</div><p>Each cart item maps to 3 pairings, found by SQL LIKE. Items already in the cart are skipped.</p></div>
+    <div class="node rule" style="animation-delay:.8s"><div class="dot">3</div><h3>Top 5</h3><div class="k">candidates</div><p>De duplicated, in rule priority order.</p></div>
+    <div class="node rule" style="animation-delay:1.15s"><div class="dot">4</div><h3>Cache check</h3><div class="k">MD5 key · 5 min TTL</div><p>Same cart, same candidates: no second LLM call.</p></div>
+    <div class="node ai" style="animation-delay:1.5s"><div class="dot">5</div><h3>Rank + enrich</h3><div class="k">DeepSeek V3 via OpenRouter</div><p>Reads the reviews, returns confidence, why, when, best for, pros and cons as JSON.</p></div>
+    <div class="node ai" style="animation-delay:1.85s"><div class="dot">6</div><h3>AI Picks</h3><div class="k">top 3</div><p>Shown in the cart drawer with the reasoning attached.</p></div>
+  </div>
+  <div class="rules">
+    <div><h3>13 cart keys</h3><div class="sub">Hand written pairings. They work with no key at all.</div></div>
+    <div>
+      <div class="keys">
+        <span class="hit" style="animation-delay:2s">Milk</span><span style="animation-delay:2.05s">Bread</span><span style="animation-delay:2.1s">Eggs</span><span style="animation-delay:2.15s">Yogurt</span><span style="animation-delay:2.2s">Tomatoes</span><span style="animation-delay:2.25s">Bananas</span><span style="animation-delay:2.3s">Coffee</span><span style="animation-delay:2.35s">Chocolate</span><span style="animation-delay:2.4s">Rice</span><span style="animation-delay:2.45s">Chips</span><span style="animation-delay:2.5s">Cheese</span><span style="animation-delay:2.55s">Butter</span><span style="animation-delay:2.6s">Berries</span>
+      </div>
+      <div class="pairs"><b>Bread</b> → Almond Butter · <b>Rice</b> → Schezwan Sauce · <b>Chips</b> → Sparkling Water Lime · <b>Coffee</b> → Dark Chocolate Bar 70%</div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" data-panel="03_fallback" data-alt="Fallback first: the shopper never sees an error. Tier 1, AI ranking: the model ranks and enriches the top candidates and successful responses are cached. Tier 2, when ranking fails: rule based picks, each with its own LLM explanation built from customer reviews. Tier 3, final fallback: rule based picks with hand written reasons, which always returns valid recommendations; an empty cart match falls back to top rated products. Each OpenRouter call has a 30 second timeout and up to 3 retries with exponential backoff: 1 second, then 2, then 4, capped at 10 seconds. Malformed JSON is repaired, for example by stripping code fences, before validation with Pydantic. AI versus deterministic: product matching is a rule based dictionary; recommendation explanations and review summaries are LLM powered with a fallback; product search is filter and regex; cart logic is React state.">
+  <div class="eyebrow">Fallback first</div>
+  <h2>Three tiers, so the shopper <em>never sees an error.</em></h2>
+  <p class="lede">If the API is down, slow or returns bad JSON, the system steps down a tier. Failures are logged on the server, never shown to the user.</p>
+  <div class="tiers">
+    <div class="tier" style="animation-delay:.1s"><div class="n">1</div><h3>AI ranking</h3><p>The model ranks the top candidates and writes the full reasoning. Good answers are cached.</p><div class="when">primary path</div></div>
+    <div class="tier" style="animation-delay:.5s"><div class="n">2</div><h3>Rules + LLM explanation</h3><p>Rule picks, each explained by the model from its customer reviews.</p><div class="when">when ranking fails</div></div>
+    <div class="tier" style="animation-delay:.9s"><div class="n">3</div><h3>Rules only</h3><p>Hand written reasons. No match? Top rated products. Always returns valid picks.</p><div class="when">no key, no network</div></div>
+  </div>
+  <div class="lower">
+    <div>
+      <h3>Patient retries</h3>
+      <div class="sub">Exponential backoff on every OpenRouter call</div>
+      <div class="backoff">
+        <div class="bk" style="height:11%;animation-delay:1.2s"><span>1 s</span></div>
+        <div class="bk" style="height:22%;animation-delay:1.4s"><span>2 s</span></div>
+        <div class="bk" style="height:44%;animation-delay:1.6s"><span>4 s</span></div>
+        <div class="bk cap" style="height:100%;animation-delay:1.8s"><span>10 s</span></div>
+      </div>
+      <div class="bklab"><span>retry 1</span><span>retry 2</span><span>retry 3</span><span>max delay</span></div>
+      <ul class="facts">
+        <li><b>30 s</b> request timeout, <b>3</b> retries, delay doubles from <b>1 s</b></li>
+        <li>Bad JSON is repaired (code fences stripped) before Pydantic validation</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Who decides what</h3>
+      <div class="sub">AI where it adds trust, rules where it must be predictable</div>
+      <table class="who">
+        <tr><td style="animation-delay:1.3s">Product matching</td><td style="animation-delay:1.3s"><span class="pill r">rules dictionary</span></td></tr>
+        <tr><td style="animation-delay:1.45s">Recommendation explanations</td><td style="animation-delay:1.45s"><span class="pill a">LLM + fallback</span></td></tr>
+        <tr><td style="animation-delay:1.6s">Review summaries</td><td style="animation-delay:1.6s"><span class="pill a">LLM + fallback</span></td></tr>
+        <tr><td style="animation-delay:1.75s">Product search</td><td style="animation-delay:1.75s"><span class="pill r">filter + regex</span></td></tr>
+        <tr><td style="animation-delay:1.9s">Cart logic</td><td style="animation-delay:1.9s"><span class="pill r">React state</span></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel anat" data-panel="04_pick_card" data-alt="Anatomy of an AI pick, from the sample response in the docs. Greek Yogurt Plain, confidence 92 out of 100. Why: customers buying milk frequently add Greek yogurt for a protein rich breakfast, and reviews highlight the creamy texture. When: for weekday breakfasts. Best for: health conscious families. Pros: high in protein, creamy texture, good value for money. Cons: slightly tangy taste, shorter shelf life than expected. Confidence colors: 90 to 100 green for high, 70 to 89 yellow for medium, below 70 red for low. Seeded review sentiment across 147 reviews: 112 positive, 21 neutral, 14 negative. Trust features: an expandable reasoning card, a confidence indicator, a review sentiment summary, a recommendation type badge with 7 types such as Frequently Bought Together and Meal Companion, an AI insights panel showing what was analysed, an informative empty state, and thumbs up or down feedback stored in localStorage.">
+  <div class="eyebrow">Anatomy of a pick</div>
+  <h2>Every suggestion <em>shows its working.</em></h2>
+  <div class="anatgrid">
+    <div>
+      <div class="bigpick">
+        <div class="top"><span class="nm">Greek Yogurt Plain</span><span class="conf">92<small>/100</small></span></div>
+        <div class="bar"><i></i></div>
+        <div class="field" style="animation-delay:.6s"><span>why</span><span>Customers buying milk frequently add Greek yogurt for a protein rich breakfast. Reviews highlight the creamy texture.</span></div>
+        <div class="field" style="animation-delay:.8s"><span>when</span><span>For weekday breakfasts</span></div>
+        <div class="field" style="animation-delay:1s"><span>best for</span><span>Health conscious families</span></div>
+        <div class="field" style="animation-delay:1.2s"><span>pros</span><span class="pc"><i>High in protein</i><i>Creamy texture</i><i>Good value</i></span></div>
+        <div class="field" style="animation-delay:1.4s"><span>cons</span><span class="pc"><i>Slightly tangy</i><i>Shorter shelf life</i></span></div>
+      </div>
+      <div class="src">Sample AI response for a cart with milk, from docs/AI_RECOMMENDATION_ENGINE_REPORT.md</div>
+    </div>
+    <div class="right">
+      <h3>Confidence, colour coded</h3>
+      <div class="bands"><div class="lo" style="animation-delay:.4s">low</div><div class="md" style="animation-delay:.7s">medium</div><div class="hi" style="animation-delay:1s">high</div></div>
+      <div class="bandlab"><span>below 70</span><span>70 to 89</span><span>90+</span></div>
+      <div class="sent">
+        <h3>What the reviews say</h3>
+        <div class="sentbar">
+          <div style="flex:112;background:var(--teal);animation-delay:1.2s"></div>
+          <div style="flex:21;background:var(--citrus);animation-delay:1.4s"></div>
+          <div style="flex:14;background:var(--berry);animation-delay:1.6s"></div>
+        </div>
+        <div class="sentlab"><span><b>112</b> positive</span><span><b>21</b> neutral</span><span><b>14</b> negative</span></div>
+      </div>
+      <ul class="trust">
+        <li style="animation-delay:1.8s">Expandable reasoning card</li>
+        <li style="animation-delay:1.9s">Confidence indicator</li>
+        <li style="animation-delay:2s">Review sentiment summary</li>
+        <li style="animation-delay:2.1s">7 recommendation badges</li>
+        <li style="animation-delay:2.2s">AI insights panel</li>
+        <li style="animation-delay:2.3s">Thumbs up or down feedback</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="panel" data-panel="05_stack" data-alt="Stack, API and what is next. Frontend: Next.js 16, React 19, TypeScript, Tailwind CSS v4 and shadcn/ui, mobile first with bottom navigation. Backend: Python 3, FastAPI, SQLAlchemy and SQLite, auto seeded on first run. LLM: OpenRouter API with DeepSeek V3. Testing: Pytest with httpx mocking. Deployment: Vercel for the frontend and Render for the backend. Endpoints: GET / health check, GET /products/ lists all products with review counts, POST /recommendations/ returns picks for a cart. Run: in backend, pip install the requirements and run uvicorn app.main:app with reload on port 8000; in the frontend folder, npm install and npm run dev on port 3000. Future improvements: PostgreSQL for production, user accounts and personalised picks, order history and reorder, real inventory data, A/B testing of recommendation quality, Redis caching for LLM responses, WebSocket cart sync, and an analytics dashboard.">
+  <div class="eyebrow">Under the hood</div>
+  <h2>Two services, three endpoints, <em>one honest fallback.</em></h2>
+  <div class="stackgrid">
+    <div>
+      <h3>Stack</h3>
+      <div class="layer" style="animation-delay:.1s"><span>frontend</span>Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui</div>
+      <div class="layer" style="animation-delay:.25s"><span>backend</span>Python 3, FastAPI, SQLAlchemy, SQLite</div>
+      <div class="layer" style="animation-delay:.4s"><span>LLM</span>OpenRouter API, DeepSeek V3</div>
+      <div class="layer" style="animation-delay:.55s"><span>testing</span>Pytest with httpx mocking</div>
+      <div class="layer" style="animation-delay:.7s"><span>deploy</span>Vercel (frontend), Render (backend)</div>
+    </div>
+    <div>
+      <h3>API</h3>
+      <div class="ep"><b>GET</b><span><code>/</code>Health check</span></div>
+      <div class="ep"><b>GET</b><span><code>/products/</code>All products with review counts</span></div>
+      <div class="ep"><b>POST</b><span><code>/recommendations/</code>Picks for a cart</span></div>
+      <div class="term"><span class="c"># backend, port 8000</span><br>uvicorn app.main:app <span class="c">(reload)</span><br><span class="c"># frontend, port 3000</span><br>npm run dev</div>
+    </div>
+    <div>
+      <h3>Next on the list</h3>
+      <ul class="next">
+        <li style="animation-delay:.3s">PostgreSQL for production</li>
+        <li style="animation-delay:.4s">Accounts and personalised picks</li>
+        <li style="animation-delay:.5s">Order history and reorder</li>
+        <li style="animation-delay:.6s">Real inventory data</li>
+        <li style="animation-delay:.7s">A/B tests of pick quality</li>
+        <li style="animation-delay:.8s">Redis cache for LLM replies</li>
+        <li style="animation-delay:.9s">Real time cart sync</li>
+        <li style="animation-delay:1s">Analytics dashboard</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
